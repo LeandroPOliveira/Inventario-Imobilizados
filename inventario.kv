@@ -1,0 +1,79 @@
+<ContentNavigationDrawer>:
+    ScrollView:
+
+        MDList:
+
+            OneLineListItem:
+                text: 'Tela Principal'
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "principal"
+
+            OneLineListItem:
+                text: "Tela 2"
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "tela_2"
+
+
+Screen:
+    name: 'tela1'
+
+    MDToolbar:
+        id: toolbar
+        pos_hint: {"top": 1}
+        elevation: 10
+        title: "Inventário"
+        left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
+
+
+
+    MDNavigationLayout:
+        x: toolbar.height
+
+        ScreenManager:
+            id: screen_manager
+
+            Principal:
+                name: "principal"
+
+            Tela2:
+                name: "tela_2"
+
+
+        MDNavigationDrawer:
+            id: nav_drawer
+
+            ContentNavigationDrawer:
+                screen_manager: screen_manager
+                nav_drawer: nav_drawer
+
+
+
+
+<Principal>:
+
+
+
+    MDRectangleFlatButton:
+        text: 'Adicionar'
+        pos_hint: {'x':0.10, 'y':0.75}
+        on_press:
+            root.inserir()
+
+    MDSwiper:
+        id: swip
+        size_hint_y: None
+        height: root.height
+        width: root.width
+
+
+
+
+
+
+
+
+
+
+

@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 import speech_recognition as sr
 import pyttsx3
@@ -5,8 +6,8 @@ import pywhatkit
 
 listener = sr.Recognizer()
 engine = pyttsx3.init()
-voices = engine.getProperty('voices')
-engine.setProperty('voice', voices[1].id)
+# voices = engine.getProperty('voices')
+# engine.setProperty('voice', voices[1].id)
 
 def talk(text):
     engine.say(text)
@@ -29,7 +30,7 @@ def take_command():
 
 def run_alexa():
     comando = take_command()
-    print(comando)
+
     if 'tocar' in comando:
         musica = comando.replace('tocar', '')
         talk('tocando' + musica)
@@ -38,10 +39,14 @@ def run_alexa():
         hora = datetime.now().strftime('%I:%M')
         print(hora)
         talk('Agora são' + hora)
+    elif 'e-mail' in comando:
+        os.startfile('outlook')
+    elif 'desligar' in comando:
+        os.system("shutdown /s /t 1")
 
 
-while True:
-    run_alexa()
+
+run_alexa()
 
 
 
