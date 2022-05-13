@@ -1,2 +1,2 @@
-# Reconhecedor-voz
+# Reconhecimento-voz
  
