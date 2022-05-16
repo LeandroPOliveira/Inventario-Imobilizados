@@ -1,3 +1,4 @@
+from kivy.clock import Clock
 from kivy.config import Config
 
 Config.set('graphics', 'resizable', '1')
@@ -9,8 +10,13 @@ from kivy.lang.builder import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.uix.swiper import MDSwiperItem
 import pandas as pd
+from kivymd.uix.textfield import MDTextField
+from kivymd.uix.button import MDIconButton
+from kivymd.uix.floatlayout import MDFloatLayout
+import speech_recognition as sr
+import pyttsx3
+from functools import partial
 
-from kivymd.uix.button import MDRectangleFlatButton
 
 class ContentNavigationDrawer(Screen):
     pass
@@ -19,25 +25,76 @@ class ContentNavigationDrawer(Screen):
 class Principal(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.label_descr = None
+        self.icone = None
+        self.num_invent = None
+        self.num_serie = None
+        self.label_imob = None
+        self.inserir_layout = None
         self.insere_denom = None
-        self.insere_imob = None
+        self.num_imob = None
         self.insere_swiper = None
+        self.listener = sr.Recognizer()
+        self.engine = pyttsx3.init()
+        self.lista = []
+        self.lista_icon = []
+        Clock.schedule_once(self.inserir)
 
-    def inserir(self):
+    def inserir(self, dt):
+        # Buscar dados para alimentar o aplicativo
         dados = pd.read_excel('base.xlsx')
-        for index, row in dados.iterrows():
-            self.insere_swiper = MDSwiperItem()
-            # self.insere_swip.id = f'teste{index}'
-            self.ids.swip.add_widget(self.insere_swiper)
-            self.insere_imob = MDRectangleFlatButton(text=row['Imobilizado'], pos_hint={'x': 0, 'y': .7},
+        dados = dados.fillna('')
+
+        for index, row in dados[:4].iterrows():  # Organizar os dados na tela do app
+            self.insere_swiper = MDSwiperItem()  # Criar um "swiper" para cada imobilizado
+            self.ids.swiper.add_widget(self.insere_swiper)
+
+            self.inserir_layout = MDFloatLayout()  # Adicionar layout para organizar os widgets
+            self.insere_swiper.add_widget(self.inserir_layout)
+
+            # inserir os rótulos para cada item
+            self.label_imob = MDLabel(pos_hint={'x': 0, 'y': .75}, font_size=20, text='Nº Imobilizado',
+                                      size_hint=(1, .2), halign='center')
+            self.inserir_layout.add_widget(self.label_imob)
+            self.label_descr = MDLabel(pos_hint={'x': 0, 'y': .55}, font_size=20, text='Descrição',
                                        size_hint=(1, .2), halign='center')
-            self.insere_denom = MDRectangleFlatButton(text=row['Denominação'], pos_hint={'x': 0, 'y': .4},
-                                        size_hint=(1, .2), halign='center')
-            # lista = [self.insere, self.insere_denom]
-            # for i in lista:
-            #     self.insere_swip.add_widget(i)
-            self.insere_swiper.add_widget(self.insere_imob)
-            self.insere_swiper.add_widget(self.insere_denom)
+            self.inserir_layout.add_widget(self.label_descr)
+
+            # Inserir dados do cadastro
+            self.num_imob = MDTextField(text=row['Imobilizado'], pos_hint={'x': 0.125, 'y': .7},
+                                    size_hint=(.7, .1), halign='center')
+            self.inserir_layout.add_widget(self.num_imob)
+
+            self.insere_denom = MDTextField(text=row['Denominação'], pos_hint={'x': 0.125, 'y': .5},
+                                        size_hint=(.7, .1), halign='center')
+            self.inserir_layout.add_widget(self.insere_denom)
+
+            self.num_invent = MDTextField(text=row['Nº Inventário'], pos_hint={'x': 0.2, 'y': .4},
+                                          size_hint=(.5, .1), hint_text='Nº Inventário')
+            self.inserir_layout.add_widget(self.num_invent)
+            self.lista.append(self.num_invent)
+            self.num_serie = MDTextField(text=row['Nº Série'], pos_hint={'x': 0.2, 'y': .25},
+                                         size_hint=(.5, .1), hint_text="Nº Série")
+            self.inserir_layout.add_widget(self.num_serie)
+
+            self.icone = MDIconButton(icon='microphone', icon_size='33sp', pos_hint={'x': 0.71, 'y': .39})
+            self.lista_icon.append(self.icone)
+            self.inserir_layout.add_widget(self.lista_icon[index])
+            self.lista_icon[index].bind(on_press=partial(self.ouvir_numero, index))
+
+        self.ids.swiper.set_current(1)
+
+    def ouvir_numero(self, index, instance):
+        try:
+            with sr.Microphone() as source:
+                print('ouvindo...')
+                voz = self.listener.listen(source)
+                numero_inventario = self.listener.recognize_google(voz, language='pt-BR')
+                if len(numero_inventario) < 6:
+                    numero_inventario = str(numero_inventario).zfill(6)
+                self.lista[index].text = numero_inventario
+        except:
+            print('não entendi')
 
 
 class Tela2(Screen):
