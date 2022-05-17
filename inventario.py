@@ -1,5 +1,6 @@
 from kivy.clock import Clock
 from kivy.config import Config
+from kivy.uix.image import Image
 
 Config.set('graphics', 'resizable', '1')
 Config.set('graphics', 'width', '450')
@@ -53,7 +54,7 @@ class Principal(Screen):
             self.insere_swiper.add_widget(self.inserir_layout)
 
             # inserir os rótulos para cada item
-            self.label_imob = MDLabel(pos_hint={'x': 0, 'y': .75}, font_size=20, text='Nº Imobilizado',
+            self.label_imob = MDLabel(pos_hint={'x': 0, 'y': .72}, font_size=20, text='Nº Imobilizado',
                                       size_hint=(1, .2), halign='center')
             self.inserir_layout.add_widget(self.label_imob)
             self.label_descr = MDLabel(pos_hint={'x': 0, 'y': .55}, font_size=20, text='Descrição',
@@ -61,20 +62,20 @@ class Principal(Screen):
             self.inserir_layout.add_widget(self.label_descr)
 
             # Inserir dados do cadastro
-            self.num_imob = MDTextField(text=row['Imobilizado'], pos_hint={'x': 0.125, 'y': .7},
-                                    size_hint=(.7, .1), halign='center')
+            self.num_imob = MDTextField(text=row['Imobilizado'], pos_hint={'x': 0.15, 'y': .72},
+                                    size_hint=(.7, .02), halign='center')
             self.inserir_layout.add_widget(self.num_imob)
 
-            self.insere_denom = MDTextField(text=row['Denominação'], pos_hint={'x': 0.125, 'y': .5},
+            self.insere_denom = MDTextField(text=row['Denominação'], pos_hint={'x': 0.15, 'y': .55},
                                         size_hint=(.7, .1), halign='center')
             self.inserir_layout.add_widget(self.insere_denom)
 
             self.num_invent = MDTextField(text=row['Nº Inventário'], pos_hint={'x': 0.2, 'y': .4},
-                                          size_hint=(.5, .1), hint_text='Nº Inventário')
+                                          size_hint=(.5, .1), hint_text='Nº Inventário', mode="rectangle")
             self.inserir_layout.add_widget(self.num_invent)
             self.lista.append(self.num_invent)
             self.num_serie = MDTextField(text=row['Nº Série'], pos_hint={'x': 0.2, 'y': .25},
-                                         size_hint=(.5, .1), hint_text="Nº Série")
+                                         size_hint=(.5, .1), hint_text="Nº Série", mode="rectangle")
             self.inserir_layout.add_widget(self.num_serie)
 
             self.icone = MDIconButton(icon='microphone', icon_size='33sp', pos_hint={'x': 0.71, 'y': .39})
@@ -95,6 +96,9 @@ class Principal(Screen):
                 self.lista[index].text = numero_inventario
         except:
             print('não entendi')
+
+    def gravar(self):
+        pass
 
 
 class Tela2(Screen):
