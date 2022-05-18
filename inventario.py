@@ -1,6 +1,7 @@
+import sqlite3
+
 from kivy.clock import Clock
 from kivy.config import Config
-from kivy.uix.image import Image
 
 Config.set('graphics', 'resizable', '1')
 Config.set('graphics', 'width', '450')
@@ -17,6 +18,7 @@ from kivymd.uix.floatlayout import MDFloatLayout
 import speech_recognition as sr
 import pyttsx3
 from functools import partial
+import datetime
 
 
 class ContentNavigationDrawer(Screen):
@@ -39,14 +41,14 @@ class Principal(Screen):
         self.engine = pyttsx3.init()
         self.lista = []
         self.lista_icon = []
-        Clock.schedule_once(self.inserir)
 
-    def inserir(self, dt):
+    def inserir(self):
         # Buscar dados para alimentar o aplicativo
         dados = pd.read_excel('base.xlsx')
         dados = dados.fillna('')
+        print(len(self.manager.get_screen('pesquisar').resultado))
 
-        for index, row in dados[:4].iterrows():  # Organizar os dados na tela do app
+        for index, linha in enumerate(self.manager.get_screen('pesquisar').resultado):  # Organizar os dados na tela do app
             self.insere_swiper = MDSwiperItem()  # Criar um "swiper" para cada imobilizado
             self.ids.swiper.add_widget(self.insere_swiper)
 
@@ -62,19 +64,19 @@ class Principal(Screen):
             self.inserir_layout.add_widget(self.label_descr)
 
             # Inserir dados do cadastro
-            self.num_imob = MDTextField(text=row['Imobilizado'], pos_hint={'x': 0.15, 'y': .72},
-                                    size_hint=(.7, .02), halign='center')
+            self.num_imob = MDTextField(text=linha[0], pos_hint={'x': 0.15, 'y': .72},
+                                        size_hint=(.7, .02), halign='center')
             self.inserir_layout.add_widget(self.num_imob)
 
-            self.insere_denom = MDTextField(text=row['Denominação'], pos_hint={'x': 0.15, 'y': .55},
-                                        size_hint=(.7, .1), halign='center')
+            self.insere_denom = MDTextField(text=linha[1], pos_hint={'x': 0.15, 'y': .55},
+                                            size_hint=(.7, .1), halign='center')
             self.inserir_layout.add_widget(self.insere_denom)
 
-            self.num_invent = MDTextField(text=row['Nº Inventário'], pos_hint={'x': 0.2, 'y': .4},
+            self.num_invent = MDTextField(text=str(linha[2]).zfill(6), pos_hint={'x': 0.2, 'y': .4},
                                           size_hint=(.5, .1), hint_text='Nº Inventário', mode="rectangle")
             self.inserir_layout.add_widget(self.num_invent)
             self.lista.append(self.num_invent)
-            self.num_serie = MDTextField(text=row['Nº Série'], pos_hint={'x': 0.2, 'y': .25},
+            self.num_serie = MDTextField(text=str(linha[3]), pos_hint={'x': 0.2, 'y': .25},
                                          size_hint=(.5, .1), hint_text="Nº Série", mode="rectangle")
             self.inserir_layout.add_widget(self.num_serie)
 
@@ -101,8 +103,20 @@ class Principal(Screen):
         pass
 
 
-class Tela2(Screen):
-    pass
+class TelaPesquisa(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.resultado = None
+
+    def buscar(self):
+        conn = sqlite3.connect('base')
+        cursor = conn.cursor()
+        cursor.execute('select Imobilizado, Denominação, Inventario, Serie from inventario where Classe = ? and Data >= ? and Data <= ?',
+                       (self.ids.classe.text, datetime.datetime.strptime(self.ids.data_ini.text, "%d/%m/%Y"),
+                        datetime.datetime.strptime(self.ids.data_fim.text, "%d/%m/%Y")))
+
+        self.resultado = cursor.fetchall()
+        self.manager.current = 'principal'
 
 
 class WindowManager(ScreenManager):
