@@ -1,6 +1,4 @@
 import sqlite3
-
-from kivy.clock import Clock
 from kivy.config import Config
 
 Config.set('graphics', 'resizable', '1')
@@ -11,10 +9,10 @@ from kivymd.app import MDApp
 from kivy.lang.builder import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.uix.swiper import MDSwiperItem
-import pandas as pd
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.dialog import MDDialog
 import speech_recognition as sr
 import pyttsx3
 from functools import partial
@@ -44,11 +42,11 @@ class Principal(Screen):
 
     def inserir(self):
         # Buscar dados para alimentar o aplicativo
-        dados = pd.read_excel('base.xlsx')
-        dados = dados.fillna('')
         print(len(self.manager.get_screen('pesquisar').resultado))
 
-        for index, linha in enumerate(self.manager.get_screen('pesquisar').resultado):  # Organizar os dados na tela do app
+        # Organizar os dados na tela do app
+        for index, linha in enumerate(self.manager.get_screen('pesquisar').resultado):
+            self.ids.swiper.clear_widgets()
             self.insere_swiper = MDSwiperItem()  # Criar um "swiper" para cada imobilizado
             self.ids.swiper.add_widget(self.insere_swiper)
 
@@ -106,17 +104,33 @@ class Principal(Screen):
 class TelaPesquisa(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.erro_dialog = None
         self.resultado = None
 
     def buscar(self):
         conn = sqlite3.connect('base')
         cursor = conn.cursor()
-        cursor.execute('select Imobilizado, Denominação, Inventario, Serie from inventario where Classe = ? and Data >= ? and Data <= ?',
-                       (self.ids.classe.text, datetime.datetime.strptime(self.ids.data_ini.text, "%d/%m/%Y"),
-                        datetime.datetime.strptime(self.ids.data_fim.text, "%d/%m/%Y")))
+
+        cursor.execute('select Imobilizado, Denominação, Inventario, Serie from inventario where Classe like '
+                       'case when ? != "" then ? else "IES-%" END and Data >= case when ? != "" '
+                       'then ? else "2000-01-01 00:00:00" end and Data <= case when ? != ""'
+                       'then ? else "2100-01-01 00:00:00" end',
+                       (self.ids.classe.text, self.ids.classe.text, datetime.datetime.strptime(self.ids.data_ini.text,
+                        "%d/%m/%Y") if self.ids.data_ini.text != '' else '',
+                        datetime.datetime.strptime(self.ids.data_ini.text, "%d/%m/%Y") if self.ids.data_ini.text != ''
+                        else '', datetime.datetime.strptime(self.ids.data_fim.text, "%d/%m/%Y") if
+                        self.ids.data_ini.text != '' else '',
+                        datetime.datetime.strptime(self.ids.data_fim.text, "%d/%m/%Y") if self.ids.data_ini.text != ''
+                        else ''))
 
         self.resultado = cursor.fetchall()
-        self.manager.current = 'principal'
+        print(self.ids.classe.text)
+        print(self.resultado)
+        if len(self.resultado) == 0:
+            self.erro_dialog = MDDialog(text="A pesquisa não retornou resultados!", radius=[20, 7, 20, 7], )
+            self.erro_dialog.open()
+        else:
+            self.manager.current = 'principal'
 
 
 class WindowManager(ScreenManager):
@@ -124,9 +138,9 @@ class WindowManager(ScreenManager):
 
 
 class Inventario(MDApp):
-
-    def build(self):
-        return Builder.load_file('inventario.kv')
+    pass
+    # def build(self):
+    #     return Builder.load_file('inventario.kv')
 
 
 Inventario().run()
