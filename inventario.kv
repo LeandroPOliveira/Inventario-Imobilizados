@@ -81,6 +81,8 @@ Screen:
         text_color: 1, 1, 1, 1
         line_color: 1, 1, 1, 1
         md_bg_color: (33/255,150/255,243/255,1)
+        on_press:
+            root.gravar()
 
     MDSwiper:
         id: swiper
@@ -108,9 +110,17 @@ Screen:
             ripple_scale: 0
 
         MDTextField:
+            id: descricao
+            mode: 'rectangle'
+            hint_text: 'Descrição'
+            pos_hint: {'x': .3, 'y': .75}
+            size_hint: .4, .1
+            write_tab: False
+
+        MDTextField:
             mode: 'rectangle'
             hint_text: 'Nº Imobilizado'
-            pos_hint: {'x': .3, 'y': .75}
+            pos_hint: {'x': .3, 'y': .6375}
             size_hint: .4, .1
             write_tab: False
 
@@ -119,7 +129,7 @@ Screen:
             text: 'IES-20'
             mode: 'rectangle'
             hint_text: 'Classe'
-            pos_hint: {'x': .3, 'y': .6375}
+            pos_hint: {'x': .3, 'y': .525}
             size_hint: .4, .1
             write_tab: False
 
@@ -127,7 +137,7 @@ Screen:
             id: num_invent
             mode: 'rectangle'
             hint_text: 'Nº Inventário'
-            pos_hint: {'x': .3, 'y': .525}
+            pos_hint: {'x': .3, 'y': .4125}
             size_hint: .4, .1
             write_tab: False
 
@@ -136,7 +146,7 @@ Screen:
             text: '01/01/2009'
             mode: 'rectangle'
             hint_text: 'Data Inicial'
-            pos_hint: {'x': .2, 'y': .4}
+            pos_hint: {'x': .2, 'y': .28}
             size_hint: .21, .1
             write_tab: False
 
@@ -145,7 +155,7 @@ Screen:
             text: '31/12/2010'
             mode: 'rectangle'
             hint_text: 'Data Final'
-            pos_hint: {'x': .59, 'y': .4}
+            pos_hint: {'x': .59, 'y': .28}
             size_hint: .21, .1
             write_tab: False
 
