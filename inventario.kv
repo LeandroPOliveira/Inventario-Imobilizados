@@ -15,6 +15,11 @@
                     root.nav_drawer.set_state("close")
                     root.screen_manager.current = "pesquisar"
 
+            OneLineListItem:
+                text: "Enviar Dados"
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "enviar"
 
 Screen:
     name: 'tela1'
@@ -40,7 +45,8 @@ Screen:
             Principal:
                 name: "principal"
 
-
+            EnviarDados:
+                name: 'enviar'
 
 
         MDNavigationDrawer:
@@ -170,9 +176,53 @@ Screen:
             on_press:
                 root.buscar()
 
+<EnviarDados>:
 
+    FloatLayout:
+        size_hint: (1, .915)
 
+        Image:
 
+        MDRectangleFlatButton:
+            size_hint: .80, .68
+            pos_hint: {'x': .1, 'y': .2}
+            text_color: (36/255,100/255,203/255,1)
+            #line_color: 1, 1, 1, 1
+            md_bg_color: 1, 1, 1, 1
+            ripple_scale: 0
 
+        MDLabel:
+            text: 'Selecione o intervalo \npara Exportação'
+            font_size: 26
+            halign: 'center'
+            pos_hint: {'x': .2, 'y': .7}
+            size_hint: .6, .1
 
+        MDTextField:
+            id: data_mod_ini
+            text: '26/05/2022'
+            mode: 'rectangle'
+            hint_text: 'Data Inicial'
+            pos_hint: {'x': .2, 'y': .5}
+            size_hint: .21, .1
+            write_tab: False
 
+        MDTextField:
+            id: data_mod_fim
+            text: '26/05/2022'
+            mode: 'rectangle'
+            hint_text: 'Data Final'
+            pos_hint: {'x': .59, 'y': .5}
+            size_hint: .21, .1
+            write_tab: False
+
+        MDRectangleFlatButton:
+            size_hint: .40, .1
+            text: 'Gerar Script'
+            font_size: 20
+            pos_hint: {'x': .3, 'y': .25}
+            text_color: 1, 1, 1, 1
+            line_color: 1, 1, 1, 1
+            md_bg_color: (33/255,150/255,243/255,1)
+            on_press:
+                root.gerar_script()

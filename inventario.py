@@ -17,7 +17,7 @@ import speech_recognition as sr
 import pyttsx3
 from functools import partial
 import datetime
-
+import pandas as pd
 
 class ContentNavigationDrawer(Screen):
     pass
@@ -106,14 +106,16 @@ class Principal(Screen):
         cursor = conn.cursor()
 
         for imob in self.lista:
-            cursor.execute('UPDATE inventario set Imobilizado = ?, Denominação = ?, Inventario = ?, Serie = ? where '
-                           '[index] = ?', (imob[0].text, imob[1].text, imob[2].text, imob[3].text, int(imob[4].text)))
+            cursor.execute('UPDATE inventario set Imobilizado = ?, Denominação = ?, Inventario = ?, Serie = ?, '
+                           'data_mod = ? where [index] = ?', (imob[0].text, imob[1].text, imob[2].text, imob[3].text,
+                                                              datetime.date.today(), int(imob[4].text)))
 
         conn.commit()
         conn.close()
         
         self.atual_dialog = MDDialog(text="Registro alterado com sucesso!", radius=[20, 7, 20, 7], )
         self.atual_dialog.open()
+
 
 class TelaPesquisa(Screen):
     def __init__(self, **kwargs):
@@ -146,6 +148,61 @@ class TelaPesquisa(Screen):
         else:
             self.manager.current = 'principal'
         conn.close()
+
+
+class EnviarDados(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def gerar_script(self):
+        conn = sqlite3.connect('base')
+        cursor = conn.cursor()
+
+        cursor.execute(
+            'select Imobilizado, Denominação, Inventario, Serie from inventario where data_mod >= ? and data_mod <= ?',
+            (datetime.datetime.strptime(self.ids.data_mod_ini.text, "%d/%m/%Y").date(),
+             datetime.datetime.strptime(self.ids.data_mod_fim.text, "%d/%m/%Y").date()))
+        dados_script = cursor.fetchall()
+        print(dados_script)
+        # Abrir arquivo de script gerado pelo SAP
+        arquivo = open('descricao.vbs',
+                       'w')  # modo 'a' de append, insere novos dados no arquivo sem excluir os que estavam
+
+        arquivo.write(f'''
+If Not IsObject(application) Then
+   Set SapGuiAuto  = GetObject("SAPGUI")
+   Set application = SapGuiAuto.GetScriptingEngine
+End If
+If Not IsObject(connection) Then
+   Set connection = application.Children(0)
+End If
+If Not IsObject(session) Then
+   Set session    = connection.Children(0)
+End If
+If IsObject(WScript) Then
+   WScript.ConnectObject session,     "on"
+   WScript.ConnectObject application, "on"
+End If
+''')
+
+# iterar sobre as linhas do arquivo excel e buscar os dados necessários para o script
+        for linha in dados_script:
+            # Adicionar os dados ao script
+            arquivo.write(f'''
+session.findById("wnd[0]").maximize
+session.findById("wnd[0]/tbar[0]/okcd").text = "as02"
+session.findById("wnd[0]").sendVKey 0
+session.findById("wnd[0]/usr/ctxtANLA-ANLN1").text = "{linha[0].split('-')[0]}"
+session.findById("wnd[0]/usr/ctxtANLA-ANLN2").text = "{linha[0].split('-')[1]}"
+session.findById("wnd[0]/usr/ctxtANLA-ANLN2").setFocus
+session.findById("wnd[0]/usr/ctxtANLA-ANLN2").caretPosition = 1
+session.findById("wnd[0]").sendVKey 0
+session.findById("wnd[0]/usr/subTABSTRIP:SAPLATAB:0100/tabsTABSTRIP100/tabpTAB01/ssubSUBSC:SAPLATAB:0200/subAREA1:SAPLAIST:1140/txtANLH-ANLHTXT").text = "{linha[1]}"
+session.findById("wnd[0]/usr/subTABSTRIP:SAPLATAB:0100/tabsTABSTRIP100/tabpTAB01/ssubSUBSC:SAPLATAB:0200/subAREA1:SAPLAIST:1140/txtANLA-SERNR").text = "{linha[3] if linha[3] != 'None' else ''}"
+session.findById("wnd[0]/usr/subTABSTRIP:SAPLATAB:0100/tabsTABSTRIP100/tabpTAB01/ssubSUBSC:SAPLATAB:0200/subAREA1:SAPLAIST:1140/txtANLA-INVNR").text = "{linha[2] if linha[2] != 'None' else ''}"
+session.findById("wnd[0]/tbar[0]/btn[11]").press
+session.findById("wnd[0]/tbar[0]/btn[3]").press
+''')
 
 
 class WindowManager(ScreenManager):
