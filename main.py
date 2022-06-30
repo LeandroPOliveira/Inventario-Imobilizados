@@ -2,7 +2,7 @@ import sqlite3
 from kivy.config import Config
 
 Config.set('graphics', 'resizable', '1')
-Config.set('graphics', 'width', '450')
+Config.set('graphics', 'width', '389')
 Config.set('graphics', 'height', '800')
 from kivymd.uix.label import MDLabel
 from kivymd.app import MDApp
@@ -13,11 +13,11 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.button import MDIconButton
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.dialog import MDDialog
-import speech_recognition as sr
-import pyttsx3
-from functools import partial
 import datetime
-import pandas as pd
+import os
+#from android.permissions import request_permissions, Permission
+#request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
+
 
 class ContentNavigationDrawer(Screen):
     pass
@@ -36,8 +36,6 @@ class Principal(Screen):
         self.insere_denom = None
         self.num_imob = None
         self.insere_swiper = None
-        self.listener = sr.Recognizer()
-        self.engine = pyttsx3.init()
         self.lista = []
         self.lista_icon = []
 
@@ -78,28 +76,13 @@ class Principal(Screen):
                                          size_hint=(.5, .1), hint_text="Nº Série", mode="rectangle")
             self.inserir_layout.add_widget(self.num_serie)
             self.lista[index].append(self.num_serie)
-            self.icone = MDIconButton(icon='microphone', icon_size='33sp', pos_hint={'x': 0.71, 'y': .39})
-            self.lista_icon.append(self.icone)
-            self.inserir_layout.add_widget(self.lista_icon[index])
-            self.lista_icon[index].bind(on_press=partial(self.ouvir_numero, index))
+
             self.ident = MDLabel(text=str(linha[4]))
             self.lista[index].append(self.ident)
 
         self.insere_swiper2 = MDSwiperItem()
         self.ids.swiper.add_widget(self.insere_swiper2)
         self.ids.swiper.set_current(1)
-
-    def ouvir_numero(self, index, instance):
-        try:
-            with sr.Microphone() as source:
-                print('ouvindo...')
-                voz = self.listener.listen(source)
-                numero_inventario = self.listener.recognize_google(voz, language='pt-BR')
-                if len(numero_inventario) < 6:
-                    numero_inventario = str(numero_inventario).zfill(6)
-                self.lista[index].text = numero_inventario
-        except:
-            print('não entendi')
 
     def gravar(self):
         conn = sqlite3.connect('base')
@@ -112,7 +95,7 @@ class Principal(Screen):
 
         conn.commit()
         conn.close()
-        
+
         self.atual_dialog = MDDialog(text="Registro alterado com sucesso!", radius=[20, 7, 20, 7], )
         self.atual_dialog.open()
 
@@ -163,9 +146,11 @@ class EnviarDados(Screen):
             (datetime.datetime.strptime(self.ids.data_mod_ini.text, "%d/%m/%Y").date(),
              datetime.datetime.strptime(self.ids.data_mod_fim.text, "%d/%m/%Y").date()))
         dados_script = cursor.fetchall()
-        print(dados_script)
+
+        # app_folder = os.getenv('EXTERNAL_STORAGE') or os.path.expanduser("~")
+        app_folder = self.ids.caminho.text
         # Abrir arquivo de script gerado pelo SAP
-        arquivo = open('descricao.vbs',
+        arquivo = open(os.path.join(app_folder, 'descricao.vbs'),
                        'w')  # modo 'a' de append, insere novos dados no arquivo sem excluir os que estavam
 
         arquivo.write(f'''
@@ -185,7 +170,7 @@ If IsObject(WScript) Then
 End If
 ''')
 
-# iterar sobre as linhas do arquivo excel e buscar os dados necessários para o script
+        # iterar sobre as linhas do arquivo excel e buscar os dados necessários para o script
         for linha in dados_script:
             # Adicionar os dados ao script
             arquivo.write(f'''
@@ -204,6 +189,9 @@ session.findById("wnd[0]/tbar[0]/btn[11]").press
 session.findById("wnd[0]/tbar[0]/btn[3]").press
 ''')
 
+        self.script_dialog = MDDialog(text=str(app_folder), radius=[20, 7, 20, 7], )
+        self.script_dialog.open()
+
 
 class WindowManager(ScreenManager):
     pass
@@ -211,8 +199,9 @@ class WindowManager(ScreenManager):
 
 class Inventario(MDApp):
     pass
-    # def build(self):
-    #     return Builder.load_file('inventario.kv')
+
+    def build(self):
+        return Builder.load_file('main.kv')
 
 
 Inventario().run()
