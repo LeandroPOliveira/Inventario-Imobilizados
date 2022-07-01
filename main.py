@@ -1,4 +1,6 @@
 import sqlite3
+
+import pandas as pd
 from kivy.config import Config
 
 Config.set('graphics', 'resizable', '1')
@@ -10,13 +12,12 @@ from kivy.lang.builder import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.uix.swiper import MDSwiperItem
 from kivymd.uix.textfield import MDTextField
-from kivymd.uix.button import MDIconButton
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.dialog import MDDialog
 import datetime
 import os
-#from android.permissions import request_permissions, Permission
-#request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
+from android.permissions import request_permissions, Permission
+request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
 
 
 class ContentNavigationDrawer(Screen):
@@ -38,14 +39,20 @@ class Principal(Screen):
         self.insere_swiper = None
         self.lista = []
         self.lista_icon = []
+        self.lista2 = []
 
     def inserir(self):
         # Buscar dados para alimentar o aplicativo
+        if len(self.lista) != 0:
+            for i in self.lista2:
+                self.ids.swiper.remove_widget(i)
 
+            self.lista.clear()
         # Organizar os dados na tela do app
         for index, linha in enumerate(self.manager.get_screen('pesquisar').resultado):
             self.lista.append([])
             self.insere_swiper = MDSwiperItem()  # Criar um "swiper" para cada imobilizado
+            self.lista2.append(self.insere_swiper)
             self.ids.swiper.add_widget(self.insere_swiper)
 
             self.inserir_layout = MDFloatLayout()  # Adicionar layout para organizar os widgets
@@ -55,7 +62,7 @@ class Principal(Screen):
             self.label_imob = MDLabel(pos_hint={'x': 0, 'y': .72}, font_size=20, text='Nº Imobilizado',
                                       size_hint=(1, .2), halign='center')
             self.inserir_layout.add_widget(self.label_imob)
-            self.label_descr = MDLabel(pos_hint={'x': 0, 'y': .55}, font_size=20, text='Descrição',
+            self.label_descr = MDLabel(pos_hint={'x': 0, 'y': .6}, font_size=20, text='Descrição',
                                        size_hint=(1, .2), halign='center')
             self.inserir_layout.add_widget(self.label_descr)
 
@@ -64,21 +71,20 @@ class Principal(Screen):
                                         size_hint=(.7, .02), halign='center')
             self.inserir_layout.add_widget(self.num_imob)
             self.lista[index].append(self.num_imob)
-            self.insere_denom = MDTextField(text=linha[1], pos_hint={'x': 0.15, 'y': .55},
-                                            size_hint=(.7, .1), halign='center')
+            self.insere_denom = MDTextField(text=linha[1][:30], pos_hint={'x': 0.1, 'y': .6},
+                                            size_hint=(.8, .1), halign='center', multiline=True)
             self.inserir_layout.add_widget(self.insere_denom)
             self.lista[index].append(self.insere_denom)
-            self.num_invent = MDTextField(text=str(linha[2]).zfill(6), pos_hint={'x': 0.2, 'y': .4},
+            self.num_invent = MDTextField(text=str(linha[2]).zfill(6), pos_hint={'x': 0.25, 'y': .5},
                                           size_hint=(.5, .1), hint_text='Nº Inventário', mode="rectangle")
             self.inserir_layout.add_widget(self.num_invent)
             self.lista[index].append(self.num_invent)
-            self.num_serie = MDTextField(text=str(linha[3]), pos_hint={'x': 0.2, 'y': .25},
+            self.num_serie = MDTextField(text=str(linha[3]), pos_hint={'x': 0.25, 'y': .4},
                                          size_hint=(.5, .1), hint_text="Nº Série", mode="rectangle")
             self.inserir_layout.add_widget(self.num_serie)
             self.lista[index].append(self.num_serie)
 
-            self.ident = MDLabel(text=str(linha[4]))
-            self.lista[index].append(self.ident)
+            self.lista[index].append(self.num_imob)
 
         self.insere_swiper2 = MDSwiperItem()
         self.ids.swiper.add_widget(self.insere_swiper2)
@@ -89,9 +95,9 @@ class Principal(Screen):
         cursor = conn.cursor()
 
         for imob in self.lista:
-            cursor.execute('UPDATE inventario set Imobilizado = ?, Denominação = ?, Inventario = ?, Serie = ?, '
-                           'data_mod = ? where [index] = ?', (imob[0].text, imob[1].text, imob[2].text, imob[3].text,
-                                                              datetime.date.today(), int(imob[4].text)))
+            cursor.execute('UPDATE inventario set Denominação = ?, Inventario = ?, Serie = ?, '
+                           'data_mod = ? where Imobilizado = ?', (imob[1].text, imob[2].text, imob[3].text,
+                                                                  datetime.date.today(), imob[0].text))
 
         conn.commit()
         conn.close()
@@ -111,7 +117,7 @@ class TelaPesquisa(Screen):
         cursor = conn.cursor()
 
         cursor.execute(
-            'select Imobilizado, Denominação, Inventario, Serie, [index] from inventario where Denominação like case '
+            'select Imobilizado, Denominação, Inventario, Serie from inventario where Denominação like case '
             'when ? != "" then ? else "%" end and Classe like '
             'case when ? != "" then ? else "IES-%" END and Data >= case when ? != "" '
             'then ? else "2000-01-01 00:00:00" end and Data <= case when ? != ""'
@@ -133,9 +139,10 @@ class TelaPesquisa(Screen):
         conn.close()
 
 
-class EnviarDados(Screen):
+class ScriptSap(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.script_dialog = None
 
     def gerar_script(self):
         conn = sqlite3.connect('base')
@@ -189,8 +196,25 @@ session.findById("wnd[0]/tbar[0]/btn[11]").press
 session.findById("wnd[0]/tbar[0]/btn[3]").press
 ''')
 
-        self.script_dialog = MDDialog(text=str(app_folder), radius=[20, 7, 20, 7], )
+        self.script_dialog = MDDialog(text='Script gerado com sucesso!', radius=[20, 7, 20, 7], )
         self.script_dialog.open()
+
+
+class Relatorio(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.relat_dialog = None
+
+    def gerar_relatorio(self):
+        conn = sqlite3.connect('base')
+        query_sql = pd.read_sql_query('select * from inventario', conn)
+        dados_relatorio = pd.DataFrame(query_sql)
+
+        pasta = self.ids.caminho_rel.text
+        dados_relatorio.to_excel(os.path.join(pasta, 'Relatório.xlsx'))
+
+        self.relat_dialog = MDDialog(text='Relatório gerado com sucesso!', radius=[20, 7, 20, 7], )
+        self.relat_dialog_dialog.open()
 
 
 class WindowManager(ScreenManager):
