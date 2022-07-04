@@ -89,6 +89,7 @@ class Principal(Screen):
         self.insere_swiper2 = MDSwiperItem()
         self.ids.swiper.add_widget(self.insere_swiper2)
         self.ids.swiper.set_current(1)
+        print(len(self.lista))
 
     def gravar(self):
         conn = sqlite3.connect('base')
@@ -214,7 +215,7 @@ class Relatorio(Screen):
         dados_relatorio.to_excel(os.path.join(pasta, 'Relatório.xlsx'))
 
         self.relat_dialog = MDDialog(text='Relatório gerado com sucesso!', radius=[20, 7, 20, 7], )
-        self.relat_dialog_dialog.open()
+        self.relat_dialog.open()
 
 
 class WindowManager(ScreenManager):
