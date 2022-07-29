@@ -1,11 +1,11 @@
 import sqlite3
-
 import pandas as pd
 from kivy.config import Config
-
+from kivy.uix.label import Label
 Config.set('graphics', 'resizable', '1')
 Config.set('graphics', 'width', '389')
 Config.set('graphics', 'height', '800')
+from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.label import MDLabel
 from kivymd.app import MDApp
 from kivy.lang.builder import Builder
@@ -14,10 +14,12 @@ from kivymd.uix.swiper import MDSwiperItem
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.dialog import MDDialog
+from kivy.metrics import dp
+from kivy.utils import get_color_from_hex
 import datetime
 import os
-from android.permissions import request_permissions, Permission
-request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
+# from android.permissions import request_permissions, Permission
+# request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
 
 
 class ContentNavigationDrawer(Screen):
@@ -49,7 +51,7 @@ class Principal(Screen):
 
             self.lista.clear()
         # Organizar os dados na tela do app
-        for index, linha in enumerate(self.manager.get_screen('pesquisar').resultado):
+        for index, linha in enumerate(self.manager.get_screen('lista').lista):
             self.lista.append([])
             self.insere_swiper = MDSwiperItem()  # Criar um "swiper" para cada imobilizado
             self.lista2.append(self.insere_swiper)
@@ -62,13 +64,13 @@ class Principal(Screen):
             self.label_imob = MDLabel(pos_hint={'x': 0, 'y': .72}, font_size=20, text='Nº Imobilizado',
                                       size_hint=(1, .2), halign='center')
             self.inserir_layout.add_widget(self.label_imob)
-            self.label_descr = MDLabel(pos_hint={'x': 0, 'y': .6}, font_size=20, text='Descrição',
+            self.label_descr = MDLabel(pos_hint={'x': 0, 'y': .61}, font_size=20, text='Descrição',
                                        size_hint=(1, .2), halign='center')
             self.inserir_layout.add_widget(self.label_descr)
 
             # Inserir dados do cadastro
-            self.num_imob = MDTextField(text=linha[0], pos_hint={'x': 0.15, 'y': .72},
-                                        size_hint=(.7, .02), halign='center')
+            self.num_imob = Label(text=linha[0], pos_hint={'x': 0.15, 'y': .76}, color=(33/255,150/255,243/255,1),
+                                  font_size=30, size_hint=(.7, .02), halign='center')
             self.inserir_layout.add_widget(self.num_imob)
             self.lista[index].append(self.num_imob)
             self.insere_denom = MDTextField(text=linha[1][:30], pos_hint={'x': 0.1, 'y': .6},
@@ -87,9 +89,9 @@ class Principal(Screen):
             self.lista[index].append(self.num_imob)
 
         self.insere_swiper2 = MDSwiperItem()
+        self.lista2.append(self.insere_swiper2)
         self.ids.swiper.add_widget(self.insere_swiper2)
         self.ids.swiper.set_current(1)
-        print(len(self.lista))
 
     def gravar(self):
         conn = sqlite3.connect('base')
@@ -107,6 +109,37 @@ class Principal(Screen):
         self.atual_dialog.open()
 
 
+class Lista(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dados_listagem = None
+        self.lista = []
+
+    def listagem_imobs(self):
+        self.dados_listagem = MDDataTable(pos_hint={'center_x': 0.5, 'center_y': 0.525},
+                                          size_hint=(.9, 0.7), use_pagination=True,
+                                          rows_num=len(self.manager.get_screen('pesquisar').resultado),
+                                          background_color_header=get_color_from_hex("#0bbd6d"),
+                                          background_color_selected_cell=get_color_from_hex("#d2f7e7"),
+                                          check=True, pagination_menu_height='140dp',
+                                          column_data=[("[color=#ffffff]Imobilizado[/color]", dp(30)),
+                                                       ("[color=#ffffff]Descrição[/color]", dp(40)),
+                                                       ("[color=#ffffff]Nº Inventário[/color]", dp(20)),
+                                                       ("[color=#ffffff]Nº Serie[/color]", dp(20)),
+                                                       ("[color=#ffffff]Data[/color]", dp(20)),
+                                                       ("[color=#ffffff]Valor[/color]", dp(20)),
+                                                       ],
+                                          row_data=self.manager.get_screen('pesquisar').resultado, elevation=1)
+
+        self.add_widget(self.dados_listagem)
+
+    def pegar_check(self):  # Selecionar notas a serem editadas
+        self.lista.clear()
+        for item in self.dados_listagem.get_row_checks():
+            self.lista.append(item)
+        self.manager.current = 'principal'
+
+
 class TelaPesquisa(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -118,7 +151,7 @@ class TelaPesquisa(Screen):
         cursor = conn.cursor()
 
         cursor.execute(
-            'select Imobilizado, Denominação, Inventario, Serie from inventario where Denominação like case '
+            'select Imobilizado, Denominação, Inventario, Serie, Data, Valor from inventario where Denominação like case '
             'when ? != "" then ? else "%" end and Classe like '
             'case when ? != "" then ? else "IES-%" END and Data >= case when ? != "" '
             'then ? else "2000-01-01 00:00:00" end and Data <= case when ? != ""'
@@ -132,11 +165,13 @@ class TelaPesquisa(Screen):
              else '', self.ids.num_invent.text, self.ids.num_invent.text))
 
         self.resultado = cursor.fetchall()
+
+
         if len(self.resultado) == 0:
             self.erro_dialog = MDDialog(text="A pesquisa não retornou resultados!", radius=[20, 7, 20, 7], )
             self.erro_dialog.open()
         else:
-            self.manager.current = 'principal'
+            self.manager.current = 'lista'
         conn.close()
 
 

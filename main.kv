@@ -27,6 +27,12 @@
                     root.nav_drawer.set_state("close")
                     root.screen_manager.current = "relatorio"
 
+            OneLineListItem:
+                text: "Lista"
+                on_press:
+                    root.nav_drawer.set_state("close")
+                    root.screen_manager.current = "lista"
+
 Screen:
     name: 'tela1'
 
@@ -57,14 +63,15 @@ Screen:
             Relatorio:
                 name: 'relatorio'
 
+            Lista:
+                name: 'lista'
+
         MDNavigationDrawer:
             id: nav_drawer
 
             ContentNavigationDrawer:
                 screen_manager: screen_manager
                 nav_drawer: nav_drawer
-
-
 
 
 <Image>
@@ -105,6 +112,26 @@ Screen:
         width: root.width
 
         MDSwiperItem:
+
+<Lista>:
+    on_enter:
+        root.listagem_imobs()
+
+    FloatLayout:
+        size_hint: (1, .915)
+
+        Image:
+
+        MDRectangleFlatButton:
+            size_hint: .40, .1
+            text: 'Editar'
+            font_size: '20dp'
+            pos_hint: {'x': .3, 'y': .05}
+            text_color: 1, 1, 1, 1
+            line_color: 1, 1, 1, 1
+            md_bg_color: (33/255,150/255,243/255,1)
+            on_press:
+                root.pegar_check()
 
 
 
