@@ -1,5 +1,6 @@
 import sqlite3
-import pandas as pd
+#import pandas as pd
+import xlsxwriter
 from kivy.config import Config
 from kivy.uix.label import Label
 Config.set('graphics', 'resizable', '1')
@@ -69,8 +70,8 @@ class Principal(Screen):
             self.inserir_layout.add_widget(self.label_descr)
 
             # Inserir dados do cadastro
-            self.num_imob = Label(text=linha[0], pos_hint={'x': 0.15, 'y': .76}, color=(33/255,150/255,243/255,1),
-                                  font_size=30, size_hint=(.7, .02), halign='center')
+            self.num_imob = Label(text=linha[0], pos_hint={'x': 0.15, 'y': .76}, color=(33/255, 150/255, 243/255, 1),
+                                  font_size='25dp', size_hint=(.7, .02), halign='center')
             self.inserir_layout.add_widget(self.num_imob)
             self.lista[index].append(self.num_imob)
             self.insere_denom = MDTextField(text=linha[1][:30], pos_hint={'x': 0.1, 'y': .6},
@@ -243,11 +244,32 @@ class Relatorio(Screen):
 
     def gerar_relatorio(self):
         conn = sqlite3.connect('base')
-        query_sql = pd.read_sql_query('select * from inventario', conn)
-        dados_relatorio = pd.DataFrame(query_sql)
-
+        cursor = conn.cursor()
+        cursor.execute('select * from inventario')
+        resultado = cursor.fetchall()
+        print(resultado)
         pasta = self.ids.caminho_rel.text
-        dados_relatorio.to_excel(os.path.join(pasta, 'Relatório.xlsx'))
+        workbook = xlsxwriter.Workbook((os.path.join(pasta, 'Relatório.xlsx')))
+        worksheet = workbook.add_worksheet()
+        for index, linha in enumerate(resultado):
+            worksheet.write(index, 0, linha[0])
+            worksheet.write(index, 1, linha[1])
+            worksheet.write(index, 2, linha[2])
+            worksheet.write(index, 3, linha[3])
+            worksheet.write(index, 4, linha[4])
+            worksheet.write(index, 5, linha[5])
+            worksheet.write(index, 6, linha[6])
+            worksheet.write(index, 7, linha[7])
+        workbook.close()
+        # query_sql = pd.read_sql_query('select * from inventario', conn)
+        # dados_relatorio = pd.DataFrame(query_sql)
+
+
+        # writer = pd.ExcelWriter((os.path.join(pasta, 'Relatório.xlsx')), engine='xlsxwriter', date_format='DD/MM/YYYY')
+        # dados_relatorio.to_excel(writer, sheet_name='Sheet1', index=False)
+        # writer.save()
+        # pasta = self.ids.caminho_rel.text
+        # dados_relatorio.to_excel(os.path.join(pasta, 'Relatório.xlsx'), index=False)
 
         self.relat_dialog = MDDialog(text='Relatório gerado com sucesso!', radius=[20, 7, 20, 7], )
         self.relat_dialog.open()
