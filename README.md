@@ -1,4 +1,8 @@
-# Inventário de imobilizados / Assets Inventory
+## *PT-BR*
+
+# ***App para inventário físico de ativos***
+
+<a href="url"><img src="https://github.com/LeandroPOliveira/Reconhecimento-voz/blob/main/Tela_app.gif" align="left" height="600" width="350" ></a><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 Modelo preliminar
 
@@ -9,7 +13,26 @@ Para inclusão dos números das plaquetas podemos digitar ou utilizar o reconhec
 
 \* O sistema android ainda não possui uma "receita" para o pacote do Python Voice Recognition, impossibilitando o uso do reconhecimento de voz em aparelhos celulares.
 
+Após finalizar os trabalhos, poderá ser gerado um script para retornar os dados para o sistema SAP de forma automática, através da data do trabalho realizado, eliminando trabalhos manuais.
+ 
 ---
+
+### Ferramentas utilizadas: 
+- Python 3.9.10
+- Kivy, KivyMD
+- Sqlite
+
+### Para testar a aplicação:
+
+~~~
+pip install -r requirements.txt
+~~~
+
+---
+
+## *EN*
+
+# ***Assets inventory App***
 
 Preliminary model
 
@@ -20,23 +43,17 @@ For the inclusion of plate numbers we can type or use the voice recognition*, in
 
 \* Android doesn't have a recipe for the library Voice Recognition from python yet, so it only works on a computer, not on a mobile device.
 
-
-Tela de Pesquisa / Search Screen:
-
-<a href="url"><img src="https://github.com/LeandroPOliveira/Reconhecimento-voz/blob/main/Tela_app.gif" align="left" height="600" width="350" ></a><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-
-
-Após finalizar os trabalhos, poderá ser gerado um script para retornar os dados para o sistema SAP de forma automática, através da data do trabalho realizado, eliminando trabalhos manuais.
- 
----
-
 After the work is done, you can generate a script to return the data for the SAP system automaticaly, throught the date of the work executed, eliminating manual work.
  
- Tela exportação Script SAP / SAP Script export:<br>
+ ### Tools used to create the app:
+- Python 3.9.10
+- Kivy, KivyMD
+- Sqlite
+
+### To test this app:
+
+~~~
+pip install -r requirements.txt
+~~~
  
- <a href="url"><img src="https://github.com/LeandroPOliveira/Reconhecimento-voz/blob/main/Tela_exportacao.png" align="left" height="600" width="350" ></a><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-
-Script em execução / Script being executed:<br>
-
-<a href="url"><img src="https://github.com/LeandroPOliveira/Reconhecimento-voz/blob/main/Script_Sap.gif" align="left" height="500" width="450" ></a>
-
+---
