@@ -148,16 +148,6 @@ class TelaPesquisa(Screen):
         self.erro_dialog = None
         self.resultado = None
 
-    def on_save(self, instance, value, date_range):
-        date_value = datetime.datetime.strptime(str(value), "%Y-%m-%d")
-        print(datetime.datetime.strptime(str(date_range[0]), "%Y-%m-%d"), date_range[-1])
-
-    def show_date_picker(self):
-        date_dialog = MDDatePicker(mode='range')
-        date_dialog.open()
-        date_dialog.bind(on_save=self.on_save)
-
-
     def buscar(self):
         conn = sqlite3.connect('base')
         cursor = conn.cursor()
